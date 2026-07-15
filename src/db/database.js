@@ -190,9 +190,7 @@ const seedCoupons = [
 
 // ─── INITIALIZE ────────────────────────────────────────────────────────────
 function initDB() {
-  // Temporary forced refresh for new products & settings
-  localStorage.removeItem(DB_KEYS.products);
-  localStorage.removeItem(DB_KEYS.settings);
+  // Temporary forced refresh for new products & settings removed to allow persistence
 
   if (!localStorage.getItem(DB_KEYS.categories)) {
     localStorage.setItem(DB_KEYS.categories, JSON.stringify(seedCategories));
