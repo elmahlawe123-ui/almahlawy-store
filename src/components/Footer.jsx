@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Share2, Heart, ArrowLeft } from 'lucide-react';
+import { Phone, Mail, MapPin, Share2, Heart, Video, ArrowLeft } from 'lucide-react';
 import { SettingsDB } from '../db/database';
 
 const Footer = () => {
@@ -37,12 +37,21 @@ const Footer = () => {
               رواد بيع وتوزيع الأدوات الصحية الفاخرة في مصر. نقدم أفضل الماركات العالمية بجودة عالية وأسعار تنافسية لعملائنا الكرام.
             </p>
             <div style={styles.socialRow}>
-              <a href="#" style={styles.socialBtn} aria-label="Facebook">
-                <Share2 size={18} />
-              </a>
-              <a href="#" style={styles.socialBtn} aria-label="Instagram">
-                <Heart size={18} />
-              </a>
+              {settings.facebookUrl && (
+                <a href={settings.facebookUrl} target="_blank" rel="noreferrer" style={styles.socialBtn} aria-label="Facebook">
+                  <Share2 size={18} />
+                </a>
+              )}
+              {settings.instagramUrl && (
+                <a href={settings.instagramUrl} target="_blank" rel="noreferrer" style={styles.socialBtn} aria-label="Instagram">
+                  <Heart size={18} />
+                </a>
+              )}
+              {settings.tiktokUrl && (
+                <a href={settings.tiktokUrl} target="_blank" rel="noreferrer" style={styles.socialBtn} aria-label="TikTok">
+                  <Video size={18} />
+                </a>
+              )}
             </div>
           </div>
 

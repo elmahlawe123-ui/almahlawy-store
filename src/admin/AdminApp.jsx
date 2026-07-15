@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Link, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Package, Tag, Gift, Settings, ShoppingCart, User,
-  Menu, X, ChevronLeft, LogOut, ShieldAlert, Bell,
+  Menu, X, ChevronLeft, LogOut, ShieldAlert, Bell, Mail
 } from 'lucide-react';
 import AdminProducts from './AdminProducts';
 import AdminCategories from './AdminCategories';
@@ -13,6 +13,7 @@ import AdminCustomers from './AdminCustomers';
 import AdminCoupons from './AdminCoupons';
 import AdminSliders from './AdminSliders';
 import AdminSettings from './AdminSettings';
+import AdminMessages from './AdminMessages';
 
 // ─── ADMIN AUTH GATE ─────────────────────────────────────────────────────────
 const ADMIN_PASS = 'admin123'; // In real app, this would be a backend auth
@@ -23,6 +24,7 @@ const AdminApp = () => {
   const [error, setError] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newOrders, setNewOrders] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
 
   useEffect(() => {
     if (!authed) return;
@@ -33,6 +35,9 @@ const AdminApp = () => {
       const pending = all.filter(o => o.status === 'pending').length;
       const newCount = Math.max(0, all.length - lastSeen);
       setNewOrders(newCount);
+      
+      const { MessagesDB } = require('../db/database');
+      setUnreadMessages(MessagesDB.getUnreadCount());
     };
     checkNewOrders();
     const iv = setInterval(checkNewOrders, 10000);
@@ -81,6 +86,7 @@ const AdminApp = () => {
     { to: '/admin/bundles', label: 'العروض المجمعة', icon: <Gift size={18} /> },
     { to: '/admin/coupons', label: 'كوبونات الخصم', icon: <Tag size={18} /> },
     { to: '/admin/sliders', label: 'بنرات الرئيسية', icon: <LayoutDashboard size={18} /> },
+    { to: '/admin/messages', label: 'الرسائل', icon: <Mail size={18} />, badge: unreadMessages > 0 ? unreadMessages : 0 },
     { to: '/admin/settings', label: 'الإعدادات', icon: <Settings size={18} /> },
   ];
 
@@ -135,6 +141,7 @@ const AdminApp = () => {
           <Route path="/bundles/*" element={<AdminBundles />} />
           <Route path="/coupons" element={<AdminCoupons />} />
           <Route path="/sliders" element={<AdminSliders />} />
+          <Route path="/messages" element={<AdminMessages />} />
           <Route path="/settings" element={<AdminSettings />} />
         </Routes>
       </main>

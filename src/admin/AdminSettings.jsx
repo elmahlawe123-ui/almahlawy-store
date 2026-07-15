@@ -97,7 +97,65 @@ const AdminSettings = () => {
             </div>
           </div>
         </div>
+        {/* Appearance Settings */}
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>🎨 المظهر العام (Theme)</h2>
+          <div style={styles.settingRow}>
+            <div>
+              <p style={styles.settingLabel}>اللون الأساسي للموقع</p>
+              <p style={styles.settingHint}>تغيير اللون الذهبي الافتراضي إلى أي لون آخر يعكس هويتك.</p>
+            </div>
+            <input
+              type="color"
+              name="primaryColor"
+              style={{ width: '60px', height: '40px', padding: 0, border: 'none', cursor: 'pointer', background: 'transparent' }}
+              value={settings.primaryColor || '#C9A96E'}
+              onChange={handleChange}
+            />
+          </div>
+        </div>
 
+        {/* Social Media Section */}
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>🔗 روابط منصات التواصل الاجتماعي</h2>
+          <div style={styles.infoGrid}>
+            <div className="form-group">
+              <label className="form-label">فيسبوك (Facebook)</label>
+              <input name="facebookUrl" className="form-control" value={settings.facebookUrl || ''} onChange={handleChange} dir="ltr" placeholder="https://facebook.com/..." />
+            </div>
+            <div className="form-group">
+              <label className="form-label">إنستجرام (Instagram)</label>
+              <input name="instagramUrl" className="form-control" value={settings.instagramUrl || ''} onChange={handleChange} dir="ltr" placeholder="https://instagram.com/..." />
+            </div>
+            <div className="form-group">
+              <label className="form-label">تيك توك (TikTok)</label>
+              <input name="tiktokUrl" className="form-control" value={settings.tiktokUrl || ''} onChange={handleChange} dir="ltr" placeholder="https://tiktok.com/..." />
+            </div>
+          </div>
+        </div>
+
+        {/* Maintenance Mode Section */}
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>🚧 حالة الموقع</h2>
+          <div style={styles.settingRow}>
+            <div>
+              <p style={styles.settingLabel}>وضع الصيانة (الموقع تحت التطوير)</p>
+              <p style={styles.settingHint}>عند تفعيل هذا الخيار، لن يتمكن الزوار من الدخول للموقع وستظهر شاشة الترحيب بكلمة مرور.</p>
+            </div>
+            <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                name="maintenanceMode"
+                checked={settings.maintenanceMode || false}
+                onChange={(e) => setSettings(s => ({ ...s, maintenanceMode: e.target.checked }))}
+                style={{ width: '20px', height: '20px', accentColor: 'var(--gold)' }}
+              />
+              <span style={{ marginRight: '10px', color: settings.maintenanceMode ? '#ef4444' : 'var(--silver)' }}>
+                {settings.maintenanceMode ? 'مفعل (الموقع مغلق)' : 'غير مفعل (الموقع مفتوح)'}
+              </span>
+            </label>
+          </div>
+        </div>
         <div style={styles.footer}>
           {saved && (
             <span style={styles.savedMsg}>

@@ -25,18 +25,40 @@ import ChatBox from './components/ChatBox';
 import AdminApp from './admin/AdminApp';
 import { initDB } from './db/database';
 import ComingSoon from './pages/ComingSoon';
+import { SettingsDB } from './db/database';
 
 function App() {
   const [unlocked, setUnlocked] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const location = window.location;
 
   useEffect(() => { 
-    initDB(); 
-    if (localStorage.getItem('dev_unlocked') === 'true') {
+    initDB();
+    const settings = SettingsDB.get();
+    
+    // Apply primary color if exists
+    if (settings.primaryColor) {
+      document.documentElement.style.setProperty('--gold', settings.primaryColor);
+    }
+
+    // Always unlock if we are on the admin path to prevent lockouts
+    if (location.pathname.startsWith('/admin')) {
+      setUnlocked(true);
+      return;
+    }
+
+    if (settings.maintenanceMode) {
+      setMaintenanceMode(true);
+      if (localStorage.getItem('dev_unlocked') === 'true') {
+        setUnlocked(true);
+      }
+    } else {
+      setMaintenanceMode(false);
       setUnlocked(true);
     }
-  }, []);
+  }, [location.pathname]);
 
-  if (!unlocked) {
+  if (maintenanceMode && !unlocked) {
     return <ComingSoon onUnlock={() => {
       localStorage.setItem('dev_unlocked', 'true');
       setUnlocked(true);

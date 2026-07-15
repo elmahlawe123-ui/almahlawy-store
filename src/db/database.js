@@ -12,6 +12,7 @@ const DB_KEYS = {
   coupons: 'db_coupons',
   customers: 'db_customers',
   sliders: 'db_sliders',
+  messages: 'db_messages',
 };
 
 // ─── SEED DATA (Initial data loaded once) ────────────────────────────────────
@@ -146,6 +147,11 @@ const seedSettings = {
   address: 'القاهرة، مصر',
   email: 'info@almahlawy.com',
   geminiApiKey: '',
+  maintenanceMode: false,
+  primaryColor: '#C9A96E',
+  facebookUrl: 'https://facebook.com',
+  instagramUrl: 'https://instagram.com',
+  tiktokUrl: 'https://tiktok.com',
 };
 
 const seedSliders = [
@@ -199,6 +205,9 @@ function initDB() {
   }
   if (!localStorage.getItem(DB_KEYS.settings)) {
     localStorage.setItem(DB_KEYS.settings, JSON.stringify(seedSettings));
+  }
+  if (!localStorage.getItem(DB_KEYS.messages)) {
+    localStorage.setItem(DB_KEYS.messages, JSON.stringify([]));
   }
   if (!localStorage.getItem(DB_KEYS.orders)) {
     localStorage.setItem(DB_KEYS.orders, JSON.stringify([]));
@@ -445,5 +454,33 @@ export const SlidersDB = {
   },
 };
 
+// ─── MESSAGES API ─────────────────────────────────────────────────────────────
+export const MessagesDB = {
+  getAll: () => getAll(DB_KEYS.messages),
+  getUnreadCount: () => getAll(DB_KEYS.messages).filter(m => !m.read).length,
+  
+  add: (data) => {
+    const messages = getAll(DB_KEYS.messages);
+    const newMsg = { ...data, id: generateId(), read: false, createdAt: Date.now() };
+    messages.unshift(newMsg);
+    saveAll(DB_KEYS.messages, messages);
+    return newMsg;
+  },
+
+  markRead: (id) => {
+    const messages = getAll(DB_KEYS.messages);
+    const idx = messages.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      messages[idx].read = true;
+      saveAll(DB_KEYS.messages, messages);
+    }
+  },
+
+  delete: (id) => {
+    const messages = getAll(DB_KEYS.messages).filter(m => m.id !== id);
+    saveAll(DB_KEYS.messages, messages);
+  },
+};
+
 export { initDB };
-export default { ProductsDB, CategoriesDB, BundlesDB, SettingsDB, OrdersDB, CouponsDB, CustomersDB, SlidersDB, initDB };
+export default { ProductsDB, CategoriesDB, BundlesDB, SettingsDB, OrdersDB, CouponsDB, CustomersDB, SlidersDB, MessagesDB, initDB };
