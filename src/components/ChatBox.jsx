@@ -82,17 +82,17 @@ const ChatBox = () => {
       });
 
       const history = currentMessages
-        .filter(m => m.id !== 1) // skip the initial default message to save tokens if desired, or keep it. Let's just pass all.
+        .filter(m => m.id !== 1)
         .map(m => `${m.sender === 'bot' ? 'Assistant' : 'User'}: ${m.text}`)
         .join('\n');
       
       const prompt = `${history}\nUser: ${userText}\nAssistant:`;
 
       const result = await model.generateContent(prompt);
-      return result.response.text();
+      return { success: true, text: result.response.text() };
     } catch (err) {
       console.error('Gemini error:', err);
-      return null;
+      return { success: false, error: err.message };
     }
   };
 
@@ -116,14 +116,23 @@ const ChatBox = () => {
     
     if (settings.geminiApiKey && settings.geminiApiKey.trim() !== '') {
       const aiResponse = await callGeminiAPI(text, settings.geminiApiKey, messages);
-      if (aiResponse) {
-        setMessages(prev => [...prev, { id: Date.now() + 1, text: aiResponse, sender: 'bot' }]);
+      if (aiResponse.success) {
+        setMessages(prev => [...prev, { id: Date.now() + 1, text: aiResponse.text, sender: 'bot' }]);
+        setIsTyping(false);
+        return;
+      } else {
+        // If there's an API error, show it to the admin/user so they can debug
+        setMessages(prev => [...prev, { 
+          id: Date.now() + 1, 
+          text: `[خطأ في مفتاح API]: ${aiResponse.error}\n\nيرجى التأكد من صلاحية المفتاح في الإعدادات.`, 
+          sender: 'bot' 
+        }]);
         setIsTyping(false);
         return;
       }
     }
 
-    // Fallback logic if Gemini fails or is not configured
+    // Fallback logic if Gemini is completely empty
     setTimeout(() => {
       const botReply = getBotResponse(text);
       if (botReply) {
