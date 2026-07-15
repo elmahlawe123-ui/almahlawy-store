@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -24,9 +24,24 @@ import CartDrawer from './components/CartDrawer';
 import ChatBox from './components/ChatBox';
 import AdminApp from './admin/AdminApp';
 import { initDB } from './db/database';
+import ComingSoon from './pages/ComingSoon';
 
 function App() {
-  useEffect(() => { initDB(); }, []);
+  const [unlocked, setUnlocked] = useState(false);
+
+  useEffect(() => { 
+    initDB(); 
+    if (localStorage.getItem('dev_unlocked') === 'true') {
+      setUnlocked(true);
+    }
+  }, []);
+
+  if (!unlocked) {
+    return <ComingSoon onUnlock={() => {
+      localStorage.setItem('dev_unlocked', 'true');
+      setUnlocked(true);
+    }} />;
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
