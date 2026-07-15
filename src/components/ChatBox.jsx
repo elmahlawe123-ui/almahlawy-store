@@ -68,7 +68,7 @@ const ChatBox = () => {
     try {
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
+        model: "gemini-flash-latest",
         systemInstruction: `أنت ممثل خدمة عملاء محترف ولطيف لمعرض "المحلاوى للأدوات الصحية".
 مهمتك مساعدة العملاء والإجابة على أسئلتهم.
 قواعد هامة جداً:
