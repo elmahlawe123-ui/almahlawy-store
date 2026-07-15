@@ -2,7 +2,7 @@ import { useContext, useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { StoreContext } from '../context/StoreContext';
 import { ProductsDB } from '../db/database';
-import { ShoppingBag, Heart, ArrowRight, CheckCircle, Package, Shield, Star, Share2, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Heart, ArrowRight, CheckCircle, Package, Shield, Star, Share2, Eye, ChevronLeft, ChevronRight, ZoomIn, X } from 'lucide-react';
 
 // ── Helpers ────────────────────────────────────────────────────────
 const getRecentlyViewed = () => {
@@ -16,9 +16,8 @@ const addToRecentlyViewed = (product) => {
 
 // ── Gallery Helper ──────────────────────────────────────────────────
 const buildGallery = (product) => {
-  if (product.images && product.images.length > 1) return product.images;
-  // Generate demo gallery with same image (real store would have multiple)
-  return [product.image, product.image, product.image].filter(Boolean);
+  if (product.images && product.images.length > 0) return product.images;
+  return [product.image].filter(Boolean);
 };
 
 const ProductDetail = () => {
@@ -30,6 +29,8 @@ const ProductDetail = () => {
   const [recentlyViewed, setRecentlyViewed] = useState([]);
   const [added, setAdded] = useState(false);
   const [galleryIdx, setGalleryIdx] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [zoomStyle, setZoomStyle] = useState({ transformOrigin: 'center center', transform: 'scale(1)' });
   const [socialViews] = useState(() => Math.floor(Math.random() * 20) + 8);
   const [qty, setQty] = useState(1);
 
@@ -95,8 +96,11 @@ const ProductDetail = () => {
         {/* ─── LEFT: Gallery ─── */}
         <div className="product-image-col" style={styles.imageCol}>
           {/* Main Image */}
-          <div style={styles.imageWrap}>
+          <div style={{ ...styles.imageWrap, cursor: 'zoom-in' }} onClick={() => setLightboxOpen(true)}>
             <img src={gallery[galleryIdx]} alt={product.name} style={styles.mainImage} />
+            <div style={styles.zoomHint}>
+              <ZoomIn size={16} /> تكبير الصورة
+            </div>
             <div style={styles.imageOverlayBtns}>
               <button
                 style={{ ...styles.wishBtn, color: wishlisted ? '#ef4444' : 'var(--silver)' }}
@@ -248,6 +252,48 @@ const ProductDetail = () => {
           </div>
         </section>
       )}
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <div style={styles.lightboxOverlay} onClick={() => setLightboxOpen(false)}>
+          <button style={styles.lightboxClose} onClick={() => setLightboxOpen(false)}><X size={32} /></button>
+          
+          <div 
+            style={styles.lightboxImgWrap} 
+            onClick={e => e.stopPropagation()}
+            onMouseMove={(e) => {
+              const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+              const x = ((e.clientX - left) / width) * 100;
+              const y = ((e.clientY - top) / height) * 100;
+              setZoomStyle({ transformOrigin: `${x}% ${y}%`, transform: 'scale(2.5)' });
+            }}
+            onMouseLeave={() => setZoomStyle({ transformOrigin: 'center center', transform: 'scale(1)' })}
+          >
+            <img 
+              src={gallery[galleryIdx]} 
+              alt={product.name} 
+              style={{ ...styles.lightboxImg, ...zoomStyle }} 
+            />
+          </div>
+
+          {gallery.length > 1 && (
+            <div style={styles.lightboxNav} onClick={e => e.stopPropagation()}>
+              <button style={styles.lightboxArrow} onClick={() => setGalleryIdx(i => Math.max(0, i - 1))} disabled={galleryIdx === 0}>
+                <ChevronRight size={24} />
+              </button>
+              <div style={styles.lightboxThumbs}>
+                {gallery.map((img, i) => (
+                  <button key={i} onClick={() => setGalleryIdx(i)} style={{ ...styles.lightboxThumb, borderColor: galleryIdx === i ? 'var(--gold)' : 'transparent' }}>
+                    <img src={img} alt="thumb" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </button>
+                ))}
+              </div>
+              <button style={styles.lightboxArrow} onClick={() => setGalleryIdx(i => Math.min(gallery.length - 1, i + 1))} disabled={galleryIdx === gallery.length - 1}>
+                <ChevronLeft size={24} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -259,8 +305,9 @@ const styles = {
   crumbSep: { color: 'var(--silver-dark)', opacity: 0.4 },
   main: { display: 'flex', gap: '60px', padding: '60px 24px', flexWrap: 'wrap', alignItems: 'flex-start' },
   imageCol: { flex: '1', minWidth: '300px', maxWidth: '520px' },
-  imageWrap: { position: 'relative', borderRadius: 'var(--r-xl)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'var(--black-card)' },
+  imageWrap: { position: 'relative', borderRadius: 'var(--r-xl)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.06)', background: 'var(--black-card)', cursor: 'zoom-in' },
   mainImage: { width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block', transition: 'opacity 0.3s ease' },
+  zoomHint: { position: 'absolute', bottom: '16px', left: '16px', background: 'rgba(0,0,0,0.6)', color: 'var(--white)', padding: '6px 12px', borderRadius: '50px', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '6px', backdropFilter: 'blur(4px)', pointerEvents: 'none' },
   imageOverlayBtns: { position: 'absolute', top: '16px', left: '16px', display: 'flex', gap: '8px', flexDirection: 'column' },
   wishBtn: { width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--silver)' },
   brandBadge: { position: 'absolute', top: '16px', right: '16px', padding: '5px 14px', background: 'rgba(0,0,0,0.7)', border: '1px solid rgba(201,169,110,0.4)', borderRadius: '50px', color: 'var(--gold)', fontSize: '0.8rem', fontWeight: '700', backdropFilter: 'blur(8px)' },
@@ -302,6 +349,15 @@ const styles = {
   relatedInfo: { padding: '14px' },
   relatedBrand: { fontSize: '0.72rem', color: 'var(--gold)', fontWeight: '700', marginBottom: '4px' },
   relatedName: { fontSize: '0.88rem', color: 'var(--white)', fontWeight: '600' },
+  // Lightbox
+  lightboxOverlay: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.95)', zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' },
+  lightboxClose: { position: 'absolute', top: '24px', right: '24px', background: 'none', border: 'none', color: 'var(--white)', cursor: 'pointer', zIndex: 10000 },
+  lightboxImgWrap: { width: '80%', height: '70vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '8px', cursor: 'crosshair', border: '1px solid rgba(255,255,255,0.1)' },
+  lightboxImg: { width: '100%', height: '100%', objectFit: 'contain', transition: 'transform 0.1s ease-out' },
+  lightboxNav: { display: 'flex', alignItems: 'center', gap: '24px', marginTop: '32px' },
+  lightboxArrow: { background: 'rgba(255,255,255,0.1)', border: 'none', width: '48px', height: '48px', borderRadius: '50%', color: 'var(--white)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'background 0.2s' },
+  lightboxThumbs: { display: 'flex', gap: '12px' },
+  lightboxThumb: { width: '60px', height: '60px', borderRadius: '8px', overflow: 'hidden', cursor: 'pointer', border: '2px solid transparent', padding: 0, background: 'var(--black-light)', transition: 'border-color 0.2s' }
 };
 
 export default ProductDetail;

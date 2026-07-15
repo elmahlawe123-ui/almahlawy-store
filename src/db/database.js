@@ -28,6 +28,11 @@ const seedProducts = [
   {
     id: 101, name: 'خلاط حوض جروهى يورو سمارت', brand: 'جروهى', brandId: 4, price: 3450, categoryId: 1, category: 'خلاطات',
     image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=400',
+    images: [
+      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1620626011761-996317b8d101?auto=format&fit=crop&q=80&w=800',
+      'https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?auto=format&fit=crop&q=80&w=800'
+    ],
     description: 'خلاط حوض عالي الجودة بتصميم عصري ولمعان يدوم طويلاً.', stock: 25, active: true, featured: true, createdAt: Date.now(),
   },
   {
@@ -137,7 +142,7 @@ const seedBundles = [
 const seedSettings = {
   minItemsForPrice: 2,
   storeName: 'معرض المحلاوى للأدوات الصحية',
-  phone: '+20 100 000 0000',
+  phone: '+201015553120',
   address: 'القاهرة، مصر',
   email: 'info@almahlawy.com',
   geminiApiKey: '',
@@ -179,8 +184,9 @@ const seedCoupons = [
 
 // ─── INITIALIZE ────────────────────────────────────────────────────────────
 function initDB() {
-  // Temporary forced refresh for new products
+  // Temporary forced refresh for new products & settings
   localStorage.removeItem(DB_KEYS.products);
+  localStorage.removeItem(DB_KEYS.settings);
 
   if (!localStorage.getItem(DB_KEYS.categories)) {
     localStorage.setItem(DB_KEYS.categories, JSON.stringify(seedCategories));

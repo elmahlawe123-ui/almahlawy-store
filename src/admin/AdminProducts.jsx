@@ -8,13 +8,12 @@ const emptyForm = {
   name: '', brand: '', price: '', categoryId: '', category: '',
   description: '', image: '', stock: '', active: true, featured: false,
 };
-
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [form, setForm] = useState(emptyForm);
+  const [form, setForm] = useState({ name: '', brand: '', price: '', categoryId: '', stock: 10, image: '', description: '', active: true, featured: false, imagesList: [''] });
   const [search, setSearch] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -30,13 +29,18 @@ const AdminProducts = () => {
   );
 
   const openAdd = () => {
-    setForm(emptyForm);
+    setForm({ name: '', brand: '', price: '', categoryId: '', stock: 10, image: '', description: '', active: true, featured: false, imagesList: [''] });
     setEditing(null);
     setShowForm(true);
   };
 
   const openEdit = (product) => {
-    setForm({ ...product, price: product.price.toString(), stock: product.stock.toString() });
+    setForm({ 
+      ...product, 
+      price: product.price.toString(), 
+      stock: product.stock.toString(),
+      imagesList: product.images && product.images.length > 0 ? product.images : [product.image || '']
+    });
     setEditing(product.id);
     setShowForm(true);
   };
@@ -44,19 +48,32 @@ const AdminProducts = () => {
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm(f => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
-    if (name === 'categoryId') {
-      const cat = categories.find(c => c.id === parseInt(value));
-      if (cat) setForm(f => ({ ...f, categoryId: parseInt(value), category: cat.name }));
-    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const data = { ...form, price: parseFloat(form.price), stock: parseInt(form.stock) };
+    
+    // Parse images
+    let imgs = form.imagesList.map(l => l.trim()).filter(Boolean);
+    const mainImg = imgs.length > 0 ? imgs[0] : '';
+
+    const pData = {
+      ...form,
+      id: editing,
+      price: Number(form.price),
+      categoryId: Number(form.categoryId),
+      category: categories.find(c => c.id === Number(form.categoryId))?.name || '',
+      stock: Number(form.stock),
+      image: mainImg,
+      images: imgs
+    };
+    
+    delete pData.imagesList;
+
     if (editing) {
-      ProductsDB.update(editing, data);
+      ProductsDB.update(editing, pData);
     } else {
-      ProductsDB.create(data);
+      ProductsDB.create(pData);
     }
     load();
     setShowForm(false);
@@ -188,9 +205,32 @@ const AdminProducts = () => {
                   <label className="form-label">المخزون</label>
                   <input name="stock" type="number" min="0" className="form-control" value={form.stock} onChange={handleChange} placeholder="الكمية المتاحة" />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">رابط الصورة</label>
-                  <input name="image" className="form-control" value={form.image} onChange={handleChange} placeholder="https://..." />
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">صور المنتج</label>
+                  {form.imagesList.map((img, idx) => (
+                    <div key={idx} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                      <input 
+                        className="form-control" 
+                        value={img} 
+                        onChange={(e) => {
+                          const newList = [...form.imagesList];
+                          newList[idx] = e.target.value;
+                          setForm(f => ({ ...f, imagesList: newList }));
+                        }} 
+                        placeholder="رابط الصورة (https://...)" 
+                        style={{ flex: 1, direction: 'ltr' }} 
+                      />
+                      {form.imagesList.length > 1 && (
+                        <button type="button" className="btn" style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }} onClick={() => {
+                          const newList = form.imagesList.filter((_, i) => i !== idx);
+                          setForm(f => ({ ...f, imagesList: newList }));
+                        }}>حذف</button>
+                      )}
+                    </div>
+                  ))}
+                  <button type="button" className="btn btn-outline" style={{ marginTop: '8px', fontSize: '0.9rem' }} onClick={() => {
+                    setForm(f => ({ ...f, imagesList: [...f.imagesList, ''] }));
+                  }}>+ إضافة رابط صورة أخرى</button>
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">وصف المنتج</label>
@@ -207,10 +247,14 @@ const AdminProducts = () => {
                   </label>
                 </div>
               </div>
-              {form.image && (
+              {form.imagesList.some(img => img.trim() !== '') && (
                 <div style={{ marginTop: '16px' }}>
-                  <p style={{ color: 'var(--silver-dark)', fontSize: '0.8rem', marginBottom: '8px' }}>معاينة الصورة:</p>
-                  <img src={form.image} alt="preview" style={{ height: '120px', borderRadius: '8px', objectFit: 'cover' }} />
+                  <p style={{ color: 'var(--silver-dark)', fontSize: '0.8rem', marginBottom: '8px' }}>معاينة الصور:</p>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {form.imagesList.filter(img => img.trim() !== '').map((img, idx) => (
+                      <img key={idx} src={img} alt="preview" style={{ height: '80px', width: '80px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                    ))}
+                  </div>
                 </div>
               )}
               <div style={styles.formFooter}>
