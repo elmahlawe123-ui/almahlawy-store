@@ -66,10 +66,23 @@ const ChatBox = () => {
 
   const callGeminiAPI = async (userText, apiKey, currentMessages) => {
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: "gemini-flash-latest",
-        systemInstruction: `أنت ممثل خدمة عملاء محترف ولطيف لمعرض "المحلاوى للأدوات الصحية".
+      const history = currentMessages
+        .filter(m => m.id !== 1)
+        .map(m => ({
+          role: m.sender === 'bot' ? 'model' : 'user',
+          parts: [{ text: m.text }]
+        }));
+      
+      history.push({ role: 'user', parts: [{ text: userText }] });
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          system_instruction: {
+            parts: { text: `أنت ممثل خدمة عملاء محترف ولطيف لمعرض "المحلاوى للأدوات الصحية".
 مهمتك مساعدة العملاء والإجابة على أسئلتهم.
 قواعد هامة جداً:
 1. لا تقم بإعطاء أي أسعار صريحة للمنتجات إطلاقاً.
@@ -78,18 +91,23 @@ const ChatBox = () => {
 4. نوفر خدمة الشحن لجميع محافظات مصر.
 5. إذا طلب العميل التحدث مع شخص بشري أو واجه مشكلة معقدة، اطلب منه الضغط على خيار "التواصل مع المبيعات".
 6. اجعل إجاباتك قصيرة وواضحة جداً (لا تتعدى 3-4 سطور).
-استخدم إيموجي مناسبة بشكل خفيف.`
+استخدم إيموجي مناسبة بشكل خفيف.` }
+          },
+          contents: history,
+        })
       });
 
-      const history = currentMessages
-        .filter(m => m.id !== 1)
-        .map(m => `${m.sender === 'bot' ? 'Assistant' : 'User'}: ${m.text}`)
-        .join('\n');
+      const data = await response.json();
       
-      const prompt = `${history}\nUser: ${userText}\nAssistant:`;
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'فشل الاتصال بـ Gemini API');
+      }
 
-      const result = await model.generateContent(prompt);
-      return { success: true, text: result.response.text() };
+      if (data.candidates && data.candidates.length > 0) {
+        return { success: true, text: data.candidates[0].content.parts[0].text };
+      } else {
+        throw new Error('لم يتم إرجاع أي نص من النموذج.');
+      }
     } catch (err) {
       console.error('Gemini error:', err);
       return { success: false, error: err.message };
